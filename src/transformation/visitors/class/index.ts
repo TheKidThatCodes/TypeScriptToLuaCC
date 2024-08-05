@@ -1,6 +1,6 @@
 import * as ts from "typescript";
 import * as lua from "../../../LuaAST";
-import { FunctionVisitor, TransformationContext } from "../../context";
+import { AllAccessorDeclarations, FunctionVisitor, TransformationContext } from "../../context";
 import {
     createDefaultExportExpression,
     createExportedIdentifier,
@@ -175,7 +175,9 @@ function transformClassLikeDeclaration(
     for (const member of classDeclaration.members) {
         if (ts.isAccessor(member)) {
             // Accessors
-            const accessors = context.resolver.getAllAccessorDeclarations(member);
+            const symbol = context.checker.getSymbolAtLocation(member.name);
+            if (!symbol) continue;
+            const accessors = getAllAccessorDeclarations(classDeclaration, symbol, context);
             if (accessors.firstAccessor !== member) continue;
 
             const accessorsResult = transformAccessorDeclarations(context, accessors, localClassName);
@@ -225,6 +227,31 @@ function transformClassLikeDeclaration(
     context.classSuperInfos.pop();
 
     return { statements: result, name: className };
+}
+
+function getAllAccessorDeclarations(
+    classDeclaration: ts.ClassLikeDeclaration,
+    symbol: ts.Symbol,
+    context: TransformationContext
+): AllAccessorDeclarations {
+    const getAccessor = classDeclaration.members.find(
+        (m): m is ts.GetAccessorDeclaration =>
+            ts.isGetAccessor(m) && context.checker.getSymbolAtLocation(m.name) === symbol
+    );
+    const setAccessor = classDeclaration.members.find(
+        (m): m is ts.SetAccessorDeclaration =>
+            ts.isSetAccessor(m) && context.checker.getSymbolAtLocation(m.name) === symbol
+    );
+
+    // Get the first of the two (that is not undefined)
+    const firstAccessor =
+        getAccessor && (!setAccessor || getAccessor.pos < setAccessor.pos) ? getAccessor : setAccessor!;
+
+    return {
+        firstAccessor,
+        setAccessor,
+        getAccessor,
+    };
 }
 
 export const transformSuperExpression: FunctionVisitor<ts.SuperExpression> = (expression, context) => {
