@@ -1,6 +1,6 @@
 {
     "name": "@thekidthatcodes/typescript-to-lua",
-    "version": "1.26.2",
+    "version": "1.26.3",
     "description": "A generic TypeScript to Lua transpiler. Write your code in TypeScript and publish Lua!",
     "repository": "https://github.com/TheKidThatCodes/TypeScriptToLuaCC",
     "homepage": "https://typescripttolua.github.io/",

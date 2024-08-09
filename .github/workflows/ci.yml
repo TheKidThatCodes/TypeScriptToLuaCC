@@ -21,24 +21,21 @@ jobs:
           CI: true
 
   test:
-    name: Test on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+    name: Test
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 16.14.0
+      - name: Use Node.js 22
         uses: actions/setup-node@v1
         with:
-          node-version: 16.14.0
+          node-version: 22
       - run: npm ci
       - run: npm run build
       - run: npx jest --maxWorkers 2 --coverage
         env:
           CI: true
-      - if: matrix.os == 'ubuntu-latest'
+      - name: whatever this is
         uses: codecov/codecov-action@v1
 
   benchmark:
